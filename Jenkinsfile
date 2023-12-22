@@ -60,5 +60,27 @@ pipeline {
             }
         }
         
+        stage('Scan Docker Image') {
+            steps {
+                sh "trivy image ravisree900/swiggy:'${env.BUILD_NUMBER}' > trivyimage.txt "
+            }
+        }
+        
+        stage('Push Docker Image into Docker Registry') {
+            steps {
+                script{
+                    withDockerRegistry(credentialsId: 'dockerhub', toolName: 'docker'){   
+                        sh " docker push ravisree900/swiggy:'${env.BUILD_NUMBER}' "
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Docker Container') {
+            steps {
+                sh " docker run --name swiggy -d -p 3000:3000 ravisree900/swiggy:'${env.BUILD_NUMBER}' "
+            }
+        }
+        
     }
 }
